@@ -10,6 +10,7 @@ window_height :: 800
 
 init :: proc() {
 	rl.InitWindow(window_width, window_height, "Memory Assignment")
+	rl.SetTargetFPS(120)
 
 	ui_init()
 }
