@@ -1,7 +1,9 @@
 package main
 
 import "core:fmt"
+import "core:math"
 import la "core:math/linalg"
+import "core:math/rand"
 import "core:mem"
 import rl "vendor:raylib"
 
@@ -71,6 +73,31 @@ update :: proc(state: ^State) {
 
 	state.player.position = state.player.position + movement_vector
 
+	// Update spawners
+	for &spawner in state.bullet_spawners {
+		if spawner.spawn_timer >= spawner.spawn_frequency {
+			spawner.spawn_timer -= spawner.spawn_frequency
+
+			angle := rand.float32_range(0, math.TAU)
+			direction: vec2 = {math.cos(angle), math.sin(angle)}
+			bullet: Bullet = {
+				x        = spawner.x,
+				y        = spawner.y,
+				type     = spawner.bullet_type,
+				velocity = direction * spawner.velocity,
+			}
+
+			append(&state.bullets, bullet)
+		}
+
+		spawner.spawn_timer += f32(state.delta_time)
+	}
+
+	// Update bullets
+	for &bullet in state.bullets {
+		bullet.position += bullet.velocity * f32(state.delta_time)
+	}
+
 	// Update camera
 	state.camera.target = state.player.position
 	state.camera.offset.x = f32(window_width) / 2
@@ -102,6 +129,11 @@ draw :: proc(state: ^State) {
 			// Spawners
 			for spawner in state.bullet_spawners {
 				rl.DrawCircleV({spawner.x, spawner.y}, 10, rl.ORANGE)
+			}
+
+			// Bullets
+			for bullet in state.bullets {
+				rl.DrawCircleV(bullet.position, 5, rl.BLACK)
 			}
 		}; rl.EndMode2D()
 	}; rl.EndDrawing()

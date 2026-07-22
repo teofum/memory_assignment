@@ -21,6 +21,7 @@ Wall :: struct {
 Spawner :: struct {
 	x, y:            f32,
 	spawn_frequency: f32,
+	spawn_timer:     f32,
 	velocity:        f32,
 	bullet_type:     BulletType,
 }
