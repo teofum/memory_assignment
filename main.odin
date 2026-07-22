@@ -40,7 +40,7 @@ collide_line_circle :: proc(x: vec2, radius: f32, p1, p2: vec2) -> (bool, vec2, 
 	return dist <= 0, la.normalize(d), dist
 }
 
-update :: proc(state: ^State) {
+update :: proc(state: ^State) -> bool {
 	// Update time
 	now := rl.GetTime()
 	state.delta_time = now - state.elapsed_time
@@ -143,11 +143,20 @@ update :: proc(state: ^State) {
 		bullet.position += movement_vector
 	}
 
+	// Check player bullet collisions
+	for bullet in state.bullets {
+		if rl.CheckCollisionCircles(state.player.position, 10, bullet.position, 5) {
+			return true
+		}
+	}
+
 	// Update camera
 	state.camera.target = state.player.position
 	state.camera.offset.x = f32(window_width) / 2
 	state.camera.offset.y = f32(window_height) / 2
 	state.camera.offset -= 0.2 * state.player.velocity
+
+	return false
 }
 
 draw :: proc(state: ^State) {
@@ -213,7 +222,7 @@ main :: proc() {
 
 	for exit := false; !exit && !rl.WindowShouldClose(); {
 		process_input(&state)
-		update(&state)
+		exit = update(&state)
 		draw(&state)
 	}
 }
