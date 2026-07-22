@@ -1,5 +1,6 @@
 package main
 
+import "base:runtime"
 import "core:encoding/json"
 import "core:mem"
 import "core:os"
@@ -36,6 +37,14 @@ Player :: struct {
 	position, velocity: vec2,
 }
 
+GameState :: enum {
+	Menu,
+	Running,
+	Paused,
+	Game_Over,
+	Quit,
+}
+
 State :: struct {
 	map_width:       i32,
 	map_height:      i32,
@@ -49,6 +58,8 @@ State :: struct {
 	camera:          rl.Camera2D,
 	elapsed_time:    f64,
 	delta_time:      f64,
+	survived_time:   f64,
+	state:           GameState,
 }
 
 MapError :: union #shared_nil {
@@ -77,7 +88,7 @@ open_map :: proc(file_name: string) -> (state: State, err: MapError) {
 	state.player.position.x = w / 2
 	state.player.position.y = h / 2
 
-	state.camera.zoom = 1.0
+	state.camera.zoom = 2.0
 
 	state.elapsed_time = rl.GetTime()
 
