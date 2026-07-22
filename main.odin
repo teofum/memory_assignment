@@ -95,7 +95,35 @@ update :: proc(state: ^State) {
 
 	// Update bullets
 	for &bullet in state.bullets {
-		bullet.position += bullet.velocity * f32(state.delta_time)
+		movement_vector := bullet.velocity * f32(state.delta_time)
+
+		for wall in state.walls {
+			collides, direction, dist := collide_line_circle(
+				bullet.position + movement_vector,
+				5 + state.wall_thickness / 2,
+				{wall.x1, wall.y1},
+				{wall.x2, wall.y2},
+			)
+
+			if collides {
+				switch bullet.type {
+				case .Bouncer:
+					movement_length := la.length(movement_vector)
+					first_move_length := la.length(movement_vector) + dist
+					bullet.position += la.normalize(movement_vector) * first_move_length // Move to collision point
+
+					movement_length -= first_move_length
+					bullet.velocity += 2 * la.dot(bullet.velocity, -direction) * direction
+					movement_vector = la.normalize(bullet.velocity) * movement_length
+				case .Bulldozer:
+				// TODO
+				case .Constructor:
+				// TODO
+				}
+			}
+		}
+
+		bullet.position += movement_vector
 	}
 
 	// Update camera
@@ -122,7 +150,7 @@ draw :: proc(state: ^State) {
 					{wall.x1, wall.y1},
 					{wall.x2, wall.y2},
 					state.wall_thickness,
-					rl.DARKBLUE if wall.invulnerable else rl.BLUE,
+					rl.BLACK if wall.invulnerable else rl.DARKBLUE,
 				)
 			}
 

@@ -64,8 +64,18 @@ open_map :: proc(file_name: string) -> (state: State, err: MapError) {
 	json.unmarshal(data, &state) or_return
 	state.bullets = make([dynamic]Bullet) or_return
 
-	state.player.position.x = f32(state.map_width) / 2
-	state.player.position.y = f32(state.map_height) / 2
+	// Map bound walls
+	w, h := f32(state.map_width), f32(state.map_height)
+	append(
+		&state.walls,
+		Wall{x1 = 0, y1 = 0, x2 = w, y2 = 0, invulnerable = true},
+		Wall{x1 = 0, y1 = h, x2 = w, y2 = h, invulnerable = true},
+		Wall{x1 = 0, y1 = 0, x2 = 0, y2 = h, invulnerable = true},
+		Wall{x1 = w, y1 = 0, x2 = w, y2 = h, invulnerable = true},
+	)
+
+	state.player.position.x = w / 2
+	state.player.position.y = h / 2
 
 	state.camera.zoom = 1.0
 
