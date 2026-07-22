@@ -8,9 +8,9 @@ import rl "vendor:raylib"
 vec2 :: [2]f32
 
 BulletType :: enum {
-	Bouncer,
-	Bulldozer,
-	Constructor,
+	bouncer,
+	bulldozer,
+	constructor,
 }
 
 Wall :: struct {

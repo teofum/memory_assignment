@@ -94,10 +94,12 @@ update :: proc(state: ^State) {
 	}
 
 	// Update bullets
-	for &bullet in state.bullets {
+	for bullet_idx := 0; bullet_idx < len(state.bullets); bullet_idx += 1 {
+		bullet := &state.bullets[bullet_idx]
+
 		movement_vector := bullet.velocity * f32(state.delta_time)
 
-		for wall in state.walls {
+		wall_loop: for wall, wall_idx in state.walls {
 			collides, direction, dist := collide_line_circle(
 				bullet.position + movement_vector,
 				5 + state.wall_thickness / 2,
@@ -107,7 +109,7 @@ update :: proc(state: ^State) {
 
 			if collides {
 				switch bullet.type {
-				case .Bouncer:
+				case .bouncer:
 					movement_length := la.length(movement_vector)
 					first_move_length := la.length(movement_vector) + dist
 					bullet.position += la.normalize(movement_vector) * first_move_length // Move to collision point
@@ -115,10 +117,25 @@ update :: proc(state: ^State) {
 					movement_length -= first_move_length
 					bullet.velocity += 2 * la.dot(bullet.velocity, -direction) * direction
 					movement_vector = la.normalize(bullet.velocity) * movement_length
-				case .Bulldozer:
-				// TODO
-				case .Constructor:
-				// TODO
+				case .bulldozer:
+					if !wall.invulnerable {
+						unordered_remove(&state.walls, wall_idx)
+					}
+
+					unordered_remove(&state.bullets, bullet_idx)
+					bullet_idx -= 1
+					break wall_loop
+				case .constructor:
+					p1 :=
+						bullet.position +
+						movement_vector +
+						(5 + state.wall_thickness / 2 - dist) * direction
+					p2 := p1 - 100 * direction
+					append(&state.walls, Wall{x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y})
+
+					unordered_remove(&state.bullets, bullet_idx)
+					bullet_idx -= 1
+					break wall_loop
 				}
 			}
 		}
