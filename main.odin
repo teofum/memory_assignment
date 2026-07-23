@@ -57,10 +57,8 @@ main :: proc() {
 		mem.tracking_allocator_destroy(&track)
 	}
 
-	state, error := open_map("data/map.json")
-	if error != nil {
-		panic("Error reading map file")
-	}
+	state: State
+	error: MapError
 
 	init()
 	defer shutdown()
@@ -68,6 +66,14 @@ main :: proc() {
 	for state.state != .Quit && !rl.WindowShouldClose() {
 		process_input(&state)
 		update(&state)
-		draw(&state)
+
+		start_game := draw(&state)
+		if start_game {
+			state, error = open_map("data/map.json")
+			if error != nil {
+				fmt.println("Error loading map data: ", error)
+				panic("Failed to load map data")
+			}
+		}
 	}
 }

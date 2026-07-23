@@ -91,6 +91,7 @@ open_map :: proc(file_name: string) -> (state: State, err: MapError) {
 	state.camera.zoom = 2.0
 
 	state.elapsed_time = rl.GetTime()
+	state.state = .Running
 
 	return
 }

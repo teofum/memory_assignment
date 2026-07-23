@@ -38,17 +38,21 @@ draw_game :: proc(state: ^State) {
 }
 
 @(private)
-draw_main_menu :: proc(state: ^State) {
+draw_main_menu :: proc(state: ^State) -> bool {
+	start_game := false
+
 	ui_begin_frame(full_screen, rl.WHITE); {
 		ui_text("Bullet Dodge Game", {0, -50}, rl.WHITE, rl.BLUE, 4, 60, .Center, .Center)
 
 		if ui_button("Start game", {0, 50}, {200, 0}, align_x = .Center, align_y = .Center) {
-			state.state = .Running
+			start_game = true
 		}
 		if ui_button("Quit", {0, 90}, {200, 0}, align_x = .Center, align_y = .Center) {
 			state.state = .Quit
 		}
 	}; ui_end_frame()
+
+	return start_game
 }
 
 @(private)
@@ -118,7 +122,9 @@ draw_game_over_menu :: proc(state: ^State) {
 	}; ui_end_frame()
 }
 
-draw :: proc(state: ^State) {
+draw :: proc(state: ^State) -> bool {
+	start_game := false
+
 	rl.BeginDrawing(); {
 		// Game world
 		if state.state != .Menu {
@@ -129,7 +135,7 @@ draw :: proc(state: ^State) {
 		ui_begin(); {
 			switch state.state {
 			case .Menu:
-				draw_main_menu(state)
+				start_game = draw_main_menu(state)
 			case .Running:
 				draw_game_ui(state)
 			case .Paused:
@@ -141,4 +147,6 @@ draw :: proc(state: ^State) {
 			}
 		}; ui_end()
 	}; rl.EndDrawing()
+
+	return start_game
 }
