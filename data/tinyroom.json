@@ -1,0 +1,16 @@
+{
+  "map_width": 300,
+  "map_height": 300,
+  "wall_thickness": 5,
+  "player_speed": 100,
+  "walls": [],
+  "bullet_spawners": [
+    {
+      "x": 150,
+      "y": 200,
+      "spawn_frequency": 2.0,
+      "velocity": 200,
+      "bullet_type": "bouncer"
+    }
+  ]
+}
