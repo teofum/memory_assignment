@@ -41,7 +41,7 @@ update_player :: proc(state: ^State) {
 		if collides {
 			// Remove the movement component normal to the wall, ie in the direction of collision
 			normal_movement_mag := la.dot(direction, movement_vector)
-			movement_vector -= min(normal_movement_mag, -dist) * direction
+			movement_vector -= min(normal_movement_mag, -dist * 1.05) * direction
 		}
 	}
 
@@ -109,6 +109,7 @@ update_bullets :: proc(state: ^State) {
 						movement_vector +
 						(5 + state.wall_thickness / 2 - dist) * direction
 					p2 := p1 - 100 * direction
+					p1 += 100 * direction
 					append(&state.walls, Wall{x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y})
 
 					unordered_remove(&state.bullets, bullet_idx)
