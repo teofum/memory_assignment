@@ -11,6 +11,7 @@ window_height :: 800
 init :: proc() {
 	rl.InitWindow(window_width, window_height, "Memory Assignment")
 	rl.SetTargetFPS(120)
+	rl.SetExitKey(nil)
 
 	ui_init()
 }
@@ -18,13 +19,22 @@ init :: proc() {
 process_input :: proc(state: ^State) {
 	state.input_vector = {0, 0}
 
-	if rl.IsKeyDown(rl.KeyboardKey.W) do state.input_vector.y -= 1
-	if rl.IsKeyDown(rl.KeyboardKey.A) do state.input_vector.x -= 1
-	if rl.IsKeyDown(rl.KeyboardKey.S) do state.input_vector.y += 1
-	if rl.IsKeyDown(rl.KeyboardKey.D) do state.input_vector.x += 1
+	if rl.IsKeyDown(.W) do state.input_vector.y -= 1
+	if rl.IsKeyDown(.A) do state.input_vector.x -= 1
+	if rl.IsKeyDown(.S) do state.input_vector.y += 1
+	if rl.IsKeyDown(.D) do state.input_vector.x += 1
 
 	if la.length2(state.input_vector) > 0 {
 		state.input_vector = la.normalize(state.input_vector)
+	}
+
+	if rl.IsKeyPressed(.ESCAPE) {
+		#partial switch state.state {
+		case .Running:
+			state.state = .Paused
+		case .Paused:
+			state.state = .Running
+		}
 	}
 }
 

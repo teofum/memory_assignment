@@ -78,6 +78,28 @@ draw_game_ui :: proc(state: ^State) {
 }
 
 @(private)
+draw_pause_menu :: proc(state: ^State) {
+	ui_begin_frame(full_screen, {0, 0, 0, 128}); {
+		ui_text("Paused", {0, -200}, rl.WHITE, rl.BLACK, 2, 60, .Center, .Center)
+
+		sb := strings.builder_make(ui_alloc)
+		fmt.sbprintf(&sb, "Survived for %3.3f seconds", state.survived_time)
+
+		ui_text(strings.to_string(sb), {0, -150}, rl.WHITE, rl.BLACK, 1, 30, .Center, .Center)
+
+		if ui_button("Resume", {0, 50}, {200, 0}, align_x = .Center, align_y = .Center) {
+			state.state = .Running
+		}
+		if ui_button("Main Menu", {0, 90}, {200, 0}, align_x = .Center, align_y = .Center) {
+			state.state = .Menu
+		}
+		if ui_button("Quit", {0, 130}, {200, 0}, align_x = .Center, align_y = .Center) {
+			state.state = .Quit
+		}
+	}; ui_end_frame()
+}
+
+@(private)
 draw_game_over_menu :: proc(state: ^State) {
 	ui_begin_frame(full_screen, {0, 0, 0, 128}); {
 		ui_text("Game Over", {0, -200}, rl.WHITE, rl.BLACK, 2, 60, .Center, .Center)
@@ -111,6 +133,7 @@ draw :: proc(state: ^State) {
 			case .Running:
 				draw_game_ui(state)
 			case .Paused:
+				draw_pause_menu(state)
 			case .Game_Over:
 				draw_game_over_menu(state)
 			case .Quit:
