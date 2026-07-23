@@ -39,6 +39,7 @@ Player :: struct {
 
 GameState :: enum {
 	Menu,
+	Map_Select,
 	Running,
 	Paused,
 	Game_Over,
@@ -60,6 +61,7 @@ State :: struct {
 	delta_time:      f64,
 	survived_time:   f64,
 	state:           GameState,
+	available_maps:  []string,
 }
 
 MapError :: union #shared_nil {

@@ -2,6 +2,8 @@ package main
 
 import "base:runtime"
 import "core:fmt"
+import "core:os"
+import "core:path/slashpath"
 import "core:strings"
 import rl "vendor:raylib"
 
@@ -39,21 +41,44 @@ draw_game :: proc(state: ^State) {
 }
 
 @(private)
-draw_main_menu :: proc(state: ^State) -> bool {
-	start_game := false
-
+draw_main_menu :: proc(state: ^State, state_alloc: runtime.Allocator) {
 	ui_begin_frame(full_screen, rl.WHITE); {
-		ui_text("Bullet Dodge Game", {0, -50}, rl.WHITE, rl.BLUE, 4, 60, .Center, .Center)
+		ui_text("Bullet Dodge Game", {0, -200}, rl.WHITE, rl.BLUE, 4, 60, .Center, .Center)
 
-		if ui_button("Start game", {0, 50}, {200, 0}, align_x = .Center, align_y = .Center) {
-			start_game = true
+		if ui_button("Start game", {0, 0}, {200, 0}, align_x = .Center, align_y = .Center) {
+			state.state = .Map_Select
+
+			// Populate map select screen
+			error: os.Error
+			state.available_maps, error = os.glob("data/*.json", state_alloc)
+			assert(error == nil, "Error loading maps")
 		}
-		if ui_button("Quit", {0, 90}, {200, 0}, align_x = .Center, align_y = .Center) {
+		if ui_button("Quit", {0, 40}, {200, 0}, align_x = .Center, align_y = .Center) {
 			state.state = .Quit
 		}
 	}; ui_end_frame()
+}
 
-	return start_game
+@(private)
+draw_map_select :: proc(state: ^State, state_alloc, temp_alloc: runtime.Allocator) -> ^string {
+	selected_map: ^string = nil
+
+	ui_begin_frame(full_screen, rl.WHITE); {
+		ui_text("Map Select", {0, -200}, rl.WHITE, rl.BLUE, 4, 60, .Center, .Center)
+
+		y0 := max(-140, -20 * f32(len(state.available_maps) - 1))
+		for filename, map_idx in state.available_maps {
+			y := y0 + 40 * f32(map_idx)
+			map_name := slashpath.name(filename)
+
+			if ui_button(map_name, {0, y}, {300, 0}, align_x = .Center, align_y = .Center) {
+				selected_map = new(string, temp_alloc)
+				selected_map^ = strings.clone(filename, temp_alloc)
+			}
+		}
+	}; ui_end_frame()
+
+	return selected_map
 }
 
 @(private)
@@ -123,8 +148,8 @@ draw_game_over_menu :: proc(state: ^State, temp_alloc: runtime.Allocator) {
 	}; ui_end_frame()
 }
 
-draw :: proc(state: ^State, temp_alloc: runtime.Allocator) -> bool {
-	start_game := false
+draw :: proc(state: ^State, state_alloc, temp_alloc: runtime.Allocator) -> ^string {
+	map_filename: ^string
 
 	rl.BeginDrawing(); {
 		// Game world
@@ -135,7 +160,9 @@ draw :: proc(state: ^State, temp_alloc: runtime.Allocator) -> bool {
 		// UI
 		switch state.state {
 		case .Menu:
-			start_game = draw_main_menu(state)
+			draw_main_menu(state, state_alloc)
+		case .Map_Select:
+			map_filename = draw_map_select(state, state_alloc, temp_alloc)
 		case .Running:
 			draw_game_ui(state, temp_alloc)
 		case .Paused:
@@ -147,5 +174,5 @@ draw :: proc(state: ^State, temp_alloc: runtime.Allocator) -> bool {
 		}
 	}; rl.EndDrawing()
 
-	return start_game
+	return map_filename
 }

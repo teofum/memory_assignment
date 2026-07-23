@@ -83,11 +83,11 @@ main :: proc() {
 	for state.state != .Quit && !rl.WindowShouldClose() {
 		process_input(&state)
 		update(&state)
-		start_game := draw(&state, temp_alloc)
+		map_to_load := draw(&state, state_alloc, temp_alloc)
 
-		if start_game {
+		if map_to_load != nil {
 			mem.free_all(state_alloc)
-			state, error = open_map("data/map.json", state_alloc)
+			state, error = open_map(map_to_load^, state_alloc)
 			if error != nil {
 				fmt.println("Error loading map data: ", error)
 				panic("Failed to load map data")
