@@ -71,6 +71,17 @@ update_spawners :: proc(state: ^State) {
 }
 
 @(private)
+bounce_bullet :: proc(bullet: ^Bullet, move, direction: vec2, dist: f32) -> vec2 {
+	movement_length := la.length(move)
+	first_move_length := la.length(move) + dist
+	bullet.position += la.normalize(move) * first_move_length // Move to collision point
+
+	movement_length -= first_move_length
+	bullet.velocity += 2 * la.dot(bullet.velocity, -direction) * direction
+	return la.normalize(bullet.velocity) * movement_length
+}
+
+@(private)
 update_bullets :: proc(state: ^State) {
 	for bullet_idx := 0; bullet_idx < len(state.bullets); bullet_idx += 1 {
 		bullet := &state.bullets[bullet_idx]
@@ -88,21 +99,16 @@ update_bullets :: proc(state: ^State) {
 			if collides {
 				switch bullet.type {
 				case .bouncer:
-					movement_length := la.length(movement_vector)
-					first_move_length := la.length(movement_vector) + dist
-					bullet.position += la.normalize(movement_vector) * first_move_length // Move to collision point
-
-					movement_length -= first_move_length
-					bullet.velocity += 2 * la.dot(bullet.velocity, -direction) * direction
-					movement_vector = la.normalize(bullet.velocity) * movement_length
+					movement_vector = bounce_bullet(bullet, movement_vector, direction, dist)
 				case .bulldozer:
 					if !wall.invulnerable {
 						unordered_remove(&state.walls, wall_idx)
+						unordered_remove(&state.bullets, bullet_idx)
+						bullet_idx -= 1
+						break wall_loop
+					} else {
+						movement_vector = bounce_bullet(bullet, movement_vector, direction, dist)
 					}
-
-					unordered_remove(&state.bullets, bullet_idx)
-					bullet_idx -= 1
-					break wall_loop
 				case .constructor:
 					p1 :=
 						bullet.position +
