@@ -1,5 +1,6 @@
 package main
 
+import "base:runtime"
 import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
@@ -56,9 +57,9 @@ draw_main_menu :: proc(state: ^State) -> bool {
 }
 
 @(private)
-draw_game_ui :: proc(state: ^State) {
+draw_game_ui :: proc(state: ^State, temp_alloc: runtime.Allocator) {
 	ui_begin_frame(full_screen, padding = {20, 20}); {
-		sb := strings.builder_make(ui_alloc)
+		sb := strings.builder_make(temp_alloc)
 
 		fmt.sbprintf(&sb, "Time: %3.3fs", state.survived_time)
 		ui_text(strings.to_string(sb), {0, 0}, rl.BLACK, rl.WHITE, 1)
@@ -82,11 +83,11 @@ draw_game_ui :: proc(state: ^State) {
 }
 
 @(private)
-draw_pause_menu :: proc(state: ^State) {
+draw_pause_menu :: proc(state: ^State, temp_alloc: runtime.Allocator) {
 	ui_begin_frame(full_screen, {0, 0, 0, 128}); {
 		ui_text("Paused", {0, -200}, rl.WHITE, rl.BLACK, 2, 60, .Center, .Center)
 
-		sb := strings.builder_make(ui_alloc)
+		sb := strings.builder_make(temp_alloc)
 		fmt.sbprintf(&sb, "Survived for %3.3f seconds", state.survived_time)
 
 		ui_text(strings.to_string(sb), {0, -150}, rl.WHITE, rl.BLACK, 1, 30, .Center, .Center)
@@ -104,11 +105,11 @@ draw_pause_menu :: proc(state: ^State) {
 }
 
 @(private)
-draw_game_over_menu :: proc(state: ^State) {
+draw_game_over_menu :: proc(state: ^State, temp_alloc: runtime.Allocator) {
 	ui_begin_frame(full_screen, {0, 0, 0, 128}); {
 		ui_text("Game Over", {0, -200}, rl.WHITE, rl.BLACK, 2, 60, .Center, .Center)
 
-		sb := strings.builder_make(ui_alloc)
+		sb := strings.builder_make(temp_alloc)
 		fmt.sbprintf(&sb, "Survived for %3.3f seconds", state.survived_time)
 
 		ui_text(strings.to_string(sb), {0, -150}, rl.WHITE, rl.BLACK, 1, 30, .Center, .Center)
@@ -122,7 +123,7 @@ draw_game_over_menu :: proc(state: ^State) {
 	}; ui_end_frame()
 }
 
-draw :: proc(state: ^State) -> bool {
+draw :: proc(state: ^State, temp_alloc: runtime.Allocator) -> bool {
 	start_game := false
 
 	rl.BeginDrawing(); {
@@ -132,20 +133,18 @@ draw :: proc(state: ^State) -> bool {
 		}
 
 		// UI
-		ui_begin(); {
-			switch state.state {
-			case .Menu:
-				start_game = draw_main_menu(state)
-			case .Running:
-				draw_game_ui(state)
-			case .Paused:
-				draw_pause_menu(state)
-			case .Game_Over:
-				draw_game_over_menu(state)
-			case .Quit:
-				unreachable()
-			}
-		}; ui_end()
+		switch state.state {
+		case .Menu:
+			start_game = draw_main_menu(state)
+		case .Running:
+			draw_game_ui(state, temp_alloc)
+		case .Paused:
+			draw_pause_menu(state, temp_alloc)
+		case .Game_Over:
+			draw_game_over_menu(state, temp_alloc)
+		case .Quit:
+			unreachable()
+		}
 	}; rl.EndDrawing()
 
 	return start_game

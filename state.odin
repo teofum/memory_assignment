@@ -68,12 +68,12 @@ MapError :: union #shared_nil {
 	mem.Allocator_Error,
 }
 
-open_map :: proc(file_name: string) -> (state: State, err: MapError) {
+open_map :: proc(file_name: string, alloc: runtime.Allocator) -> (state: State, err: MapError) {
 	data := os.read_entire_file(file_name, context.allocator) or_return
 	defer delete(data)
 
-	json.unmarshal(data, &state) or_return
-	state.bullets = make([dynamic]Bullet) or_return
+	json.unmarshal(data, &state, allocator = alloc) or_return
+	state.bullets = make([dynamic]Bullet, alloc) or_return
 
 	// Map bound walls
 	w, h := f32(state.map_width), f32(state.map_height)

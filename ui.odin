@@ -1,7 +1,6 @@
 package main
 
 import "base:runtime"
-import "core:mem"
 import "core:strings"
 import rl "vendor:raylib"
 
@@ -14,13 +13,7 @@ Alignment :: enum {
 	End    = 2,
 }
 
-// UI allocator
 @(private)
-ui_arena_data: [1024 * 1024]u8
-
-@(private)
-ui_arena: mem.Arena
-
 ui_alloc: runtime.Allocator
 
 UI_Frame :: struct {
@@ -32,17 +25,8 @@ UI_Frame :: struct {
 ui_current_frame: ^UI_Frame = nil
 
 // Initialize internal memory management for UI system
-ui_init :: proc() {
-	mem.arena_init(&ui_arena, ui_arena_data[:])
-	ui_alloc = mem.arena_allocator(&ui_arena)
-}
-
-ui_begin :: proc() {
-	// Doesn't need to do anything for now, just here so we have a clean begin/end
-}
-
-ui_end :: proc() {
-	mem.free_all(ui_alloc)
+ui_init :: proc(allocator: runtime.Allocator) {
+	ui_alloc = allocator
 }
 
 ui_begin_frame :: proc(
