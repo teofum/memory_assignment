@@ -41,7 +41,9 @@ update_player :: proc(state: ^State) {
 		if collides {
 			// Remove the movement component normal to the wall, ie in the direction of collision
 			normal_movement_mag := la.dot(direction, movement_vector)
-			movement_vector -= min(normal_movement_mag, -dist * 1.05) * direction
+			if normal_movement_mag > 0 {
+				movement_vector -= min(normal_movement_mag, -dist) * direction
+			}
 		}
 	}
 
